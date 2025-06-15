@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: ledo-sports-academy
+    env: node
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      - key: MONGODB_URI
+        sync: false
+    autoDeploy: true 

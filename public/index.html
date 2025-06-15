@@ -1,0 +1,2143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LEDO Sports Academy - Management System</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        :root {
+            --primary: #0a4d68;
+            --secondary: #05bfdb;
+            --accent: #00ffca;
+            --light: #e8f9fd;
+            --dark: #1b1b1b;
+            --success: #28a745;
+            --danger: #dc3545;
+            --warning: #ffc107;
+            --purple: #6f42c1;
+            --gray: #6c757d;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f0f8ff 0%, #e6f7ff 100%);
+            color: var(--dark);
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+        
+        body::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 10% 20%, rgba(5, 191, 219, 0.05) 0%, rgba(10, 77, 104, 0.05) 90%);
+            z-index: -1;
+        }
+        
+        header {
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            color: white;
+            padding: 1.5rem 0;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        header::after {
+            content: "";
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(to right, var(--accent), var(--secondary));
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 0.5rem;
+            animation: fadeInDown 0.8s ease-out;
+        }
+        
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .logo img {
+            height: 60px;
+            margin-right: 15px;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        .logo h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .logo span {
+            color: var(--accent);
+        }
+        
+        .admin-area {
+            background: rgba(0,0,0,0.1);
+            padding: 10px 0;
+            margin: 15px 0;
+            border-radius: 0 0 10px 10px;
+            animation: slideIn 0.6s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .admin-btn {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 8px 20px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            margin: 0 auto;
+            animation: pulse 2s infinite;
+        }
+        
+        .admin-btn:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
+        }
+        
+        .admin-btn i {
+            margin-right: 8px;
+        }
+        
+        .container {
+            width: 95%;
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 15px;
+        }
+        
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+            padding: 25px;
+            margin-bottom: 30px;
+            transition: transform 0.3s, box-shadow 0.3s;
+            animation: fadeInUp 0.6s ease-out;
+            border: 1px solid rgba(10, 77, 104, 0.1);
+        }
+        
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 30px rgba(0,0,0,0.15);
+        }
+        
+        .section-title {
+            color: var(--primary);
+            margin-bottom: 1.5rem;
+            font-size: 1.6rem;
+            position: relative;
+            padding-bottom: 12px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .section-title i {
+            margin-right: 12px;
+            color: var(--secondary);
+            background: rgba(5, 191, 219, 0.1);
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 60px;
+            height: 4px;
+            background: linear-gradient(to right, var(--secondary), var(--accent));
+            border-radius: 3px;
+        }
+        
+        .form-group {
+            margin-bottom: 1.3rem;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 0.6rem;
+            font-weight: 500;
+            color: var(--primary);
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 13px 16px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s;
+            background: #f9f9f9;
+        }
+        
+        .form-control:focus {
+            border-color: var(--secondary);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(5, 191, 219, 0.2);
+            background: white;
+        }
+        
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 13px 28px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+            gap: 8px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(to right, var(--secondary), var(--accent));
+            color: white;
+            box-shadow: 0 4px 12px rgba(5, 191, 219, 0.3);
+        }
+        
+        .btn-primary:hover {
+            background: linear-gradient(to right, #04a9c4, #00e6b8);
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(5, 191, 219, 0.4);
+        }
+        
+        .btn-sm {
+            padding: 9px 16px;
+            font-size: 0.85rem;
+        }
+        
+        .btn-success {
+            background: linear-gradient(to right, var(--success), #3dd65f);
+            color: white;
+        }
+        
+        .btn-danger {
+            background: linear-gradient(to right, var(--danger), #f05d6e);
+            color: white;
+        }
+        
+        .btn-warning {
+            background: linear-gradient(to right, var(--warning), #ffd54f);
+            color: var(--dark);
+        }
+        
+        .btn-purple {
+            background: linear-gradient(to right, var(--purple), #8c68cd);
+            color: white;
+        }
+        
+        .btn-gray {
+            background: linear-gradient(to right, var(--gray), #8d99a6);
+            color: white;
+        }
+        
+        .table-responsive {
+            overflow-x: auto;
+            border-radius: 10px;
+            border: 1px solid rgba(0,0,0,0.05);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin-top: 1rem;
+        }
+        
+        th, td {
+            padding: 16px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        
+        th {
+            background: linear-gradient(to bottom, var(--primary), #0d5a7a);
+            color: white;
+            font-weight: 500;
+            position: sticky;
+            top: 0;
+        }
+        
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        
+        tr:hover {
+            background-color: #f1f9ff;
+        }
+        
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            gap: 5px;
+        }
+        
+        .badge-success {
+            background: #d4edda;
+            color: var(--success);
+        }
+        
+        .badge-danger {
+            background: #f8d7da;
+            color: var(--danger);
+        }
+        
+        .badge-info {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+        
+        .badge-warning {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .summary-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .summary-card {
+            background: white;
+            border-radius: 12px;
+            padding: 22px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            text-align: center;
+            transition: transform 0.3s;
+            border: 1px solid rgba(10, 77, 104, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .summary-card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: var(--secondary);
+        }
+        
+        .summary-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+        }
+        
+        .summary-card h3 {
+            font-size: 1.05rem;
+            color: var(--primary);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .summary-card p {
+            font-size: 1.9rem;
+            font-weight: 700;
+            color: var(--secondary);
+        }
+        
+        .weeks-container {
+            display: flex;
+            overflow-x: auto;
+            gap: 10px;
+            padding: 12px 0;
+            margin-bottom: 20px;
+        }
+        
+        .week-btn {
+            padding: 8px 22px;
+            background: #e9ecef;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+        
+        .week-btn.active {
+            background: linear-gradient(to right, var(--secondary), var(--accent));
+            color: white;
+            box-shadow: 0 4px 8px rgba(5, 191, 219, 0.3);
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(3px);
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 500px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            position: relative;
+            animation: modalFadeIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: 2px solid var(--secondary);
+        }
+        
+        @keyframes modalFadeIn {
+            from { opacity: 0; transform: translateY(-30px) scale(0.95); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        
+        .close-modal {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            font-size: 1.8rem;
+            cursor: pointer;
+            color: var(--gray);
+            transition: all 0.3s;
+        }
+        
+        .close-modal:hover {
+            color: var(--danger);
+            transform: rotate(90deg);
+        }
+        
+        .admin-panel {
+            display: none;
+            margin-top: 30px;
+            animation: slideDown 0.5s ease-out;
+        }
+        
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .payment-amount {
+            font-weight: 700;
+            color: var(--secondary);
+        }
+        
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #ddd;
+            flex-wrap: wrap;
+        }
+        
+        .tab-btn {
+            padding: 12px 24px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+            color: #666;
+            position: relative;
+            transition: all 0.3s;
+        }
+        
+        .tab-btn.active {
+            color: var(--primary);
+            font-weight: 600;
+        }
+        
+        .tab-btn.active::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: var(--secondary);
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.5s;
+        }
+        
+        footer {
+            background: linear-gradient(to right, var(--primary), #0d5a7a);
+            color: white;
+            text-align: center;
+            padding: 2.5rem 0;
+            margin-top: 3rem;
+            border-top: 4px solid var(--accent);
+        }
+        
+        .floating-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, var(--secondary), var(--accent));
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.5rem;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.25);
+            cursor: pointer;
+            z-index: 100;
+            transition: all 0.3s;
+            animation: pulse 2s infinite;
+        }
+        
+        .floating-btn:hover {
+            transform: translateY(-5px) scale(1.1);
+            box-shadow: 0 8px 22px rgba(0,0,0,0.3);
+        }
+        
+        .download-section {
+            background: rgba(10, 77, 104, 0.05);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border: 1px dashed var(--secondary);
+        }
+        
+        .download-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .date-range {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .date-group {
+            flex: 1;
+            min-width: 200px;
+        }
+        
+        .member-photo {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--secondary);
+            background-color: #f0f0f0;
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        .member-photo:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 15px rgba(5, 191, 219, 0.5);
+        }
+        
+        .photo-placeholder {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: var(--light);
+            border: 2px dashed var(--secondary);
+            color: var(--gray);
+            font-size: 20px;
+            cursor: pointer;
+        }
+        
+        .photo-preview {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--secondary);
+            margin: 10px auto;
+            display: block;
+        }
+        
+        .photo-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .photo-upload {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        /* Full screen photo viewer */
+        .photo-viewer {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+        }
+        
+        .photo-viewer-content {
+            max-width: 90%;
+            max-height: 90%;
+        }
+        
+        .photo-viewer-content img {
+            max-width: 100%;
+            max-height: 90vh;
+            object-fit: contain;
+            border-radius: 10px;
+            box-shadow: 0 0 30px rgba(255, 255, 255, 0.2);
+        }
+        
+        .photo-viewer-close {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            color: white;
+            font-size: 40px;
+            cursor: pointer;
+            z-index: 2001;
+            transition: all 0.3s;
+        }
+        
+        .photo-viewer-close:hover {
+            color: var(--accent);
+            transform: scale(1.1);
+        }
+        
+        .photo-viewer-info {
+            position: absolute;
+            bottom: 20px;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            color: white;
+            font-size: 1.2rem;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.6);
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        
+        .financial-highlight {
+            font-size: 1.2rem;
+            background: linear-gradient(to right, var(--secondary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 700;
+            margin: 10px 0;
+            text-align: center;
+        }
+        
+        .admin-only {
+            display: none;
+        }
+        
+        .admin-visible {
+            display: block;
+        }
+        
+        .math-summary {
+            background: rgba(10, 77, 104, 0.05);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 4px solid var(--secondary);
+        }
+        
+        .math-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px dashed #ddd;
+        }
+        
+        .math-label {
+            font-weight: 500;
+        }
+        
+        .math-value {
+            font-weight: 600;
+            color: var(--primary);
+        }
+        
+        .math-result {
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: var(--success);
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 2px solid var(--secondary);
+        }
+        
+        .reset-btn {
+            background: linear-gradient(to right, var(--danger), #f05d6e);
+            color: white;
+            margin-top: 15px;
+        }
+        
+        .reset-btn:hover {
+            background: linear-gradient(to right, #bd2130, #d9534f);
+        }
+        
+        @media (max-width: 768px) {
+            .logo h1 {
+                font-size: 1.6rem;
+            }
+            
+            .summary-cards {
+                grid-template-columns: 1fr;
+            }
+            
+            th, td {
+                padding: 12px;
+                font-size: 0.9rem;
+            }
+            
+            .download-buttons {
+                flex-direction: column;
+            }
+            
+            .date-range {
+                flex-direction: column;
+            }
+            
+            .member-photo {
+                width: 40px;
+                height: 40px;
+            }
+            
+            .photo-placeholder {
+                width: 40px;
+                height: 40px;
+                font-size: 16px;
+            }
+            
+            .photo-viewer-content img {
+                max-width: 95%;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header Section -->
+    <header>
+        <div class="logo">
+            <img src="https://iili.io/F9tc8il.png" alt="LEDO Sports Academy Logo">
+            <h1>LEDO <span>SPORTS</span> ACADEMY</h1>
+        </div>
+        <p>Management System</p>
+        
+        <div class="admin-area">
+            <button class="admin-btn" id="adminToggle">
+                <i class="fas fa-lock"></i> Admin Login
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="container">
+        <!-- Summary Cards -->
+        <div class="summary-cards">
+            <div class="summary-card">
+                <h3><i class="fas fa-users"></i> Total Members</h3>
+                <p id="totalMembers">0</p>
+            </div>
+            <div class="summary-card">
+                <h3><i class="fas fa-check-circle"></i> Paid This Week</h3>
+                <p id="paidThisWeek">0</p>
+            </div>
+            <div class="summary-card">
+                <h3><i class="fas fa-times-circle"></i> Unpaid This Week</h3>
+                <p id="unpaidThisWeek">0</p>
+            </div>
+            <div class="summary-card">
+                <h3><i class="fas fa-money-bill-wave"></i> Total Collected</h3>
+                <p id="totalCollected">0</p>
+            </div>
+            <div class="summary-card">
+                <h3><i class="fas fa-wallet"></i> Current Balance</h3>
+                <p id="currentBalance">0</p>
+            </div>
+        </div>
+        
+        <!-- Week Selection -->
+        <div class="weeks-container" id="weeksContainer">
+            <!-- Weeks will be added by JavaScript -->
+        </div>
+        
+        <!-- Financial Records (Visible to all) -->
+        <div class="card">
+            <h2 class="section-title"><i class="fas fa-file-invoice-dollar"></i> Financial Records</h2>
+            
+            <div class="tabs">
+                <button class="tab-btn active" data-tab="expenses-public">Expenses</button>
+                <button class="tab-btn" data-tab="donations-public">Donations</button>
+            </div>
+            
+            <!-- Expenses Public View -->
+            <div class="tab-content active" id="expenses-public">
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Amount</th>
+                                <th>Category</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody id="expensesPublicBody">
+                            <!-- Expenses will be added by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Donations Public View -->
+            <div class="tab-content" id="donations-public">
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Amount</th>
+                                <th>Donor</th>
+                                <th>Purpose</th>
+                            </tr>
+                        </thead>
+                        <tbody id="donationsPublicBody">
+                            <!-- Donations will be added by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Admin Panel (Hidden by default) -->
+        <div class="admin-panel card" id="adminPanel">
+            <h2 class="section-title"><i class="fas fa-cog"></i> Admin Controls</h2>
+            
+            <div class="tabs">
+                <button class="tab-btn active" data-tab="membership-tab">Membership</button>
+                <button class="tab-btn" data-tab="expenses-tab">Expenses</button>
+                <button class="tab-btn" data-tab="donations-tab">Donations</button>
+            </div>
+            
+            <!-- Membership Tab -->
+            <div class="tab-content active" id="membership-tab">
+                <div class="form-group">
+                    <label for="paymentAmount">Weekly Payment Amount</label>
+                    <input type="number" id="paymentAmount" class="form-control" value="20">
+                </div>
+                
+                <button class="btn btn-primary" id="updatePaymentBtn">
+                    <i class="fas fa-sync-alt"></i> Update Payment Amount
+                </button>
+                
+                <h3 style="margin-top: 2rem;"><i class="fas fa-user-plus"></i> Add New Member</h3>
+                <form id="addMemberForm">
+                    <div class="form-group">
+                        <label for="memberName">Full Name</label>
+                        <input type="text" id="memberName" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="memberPhone">Phone Number</label>
+                        <input type="tel" id="memberPhone" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="memberAddress">Address (Optional)</label>
+                        <input type="text" id="memberAddress" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label for="memberPhoto">Photo URL</label>
+                        <input type="url" id="memberPhoto" class="form-control" placeholder="https://example.com/photo.jpg">
+                        <div class="photo-preview-container" id="photoPreviewContainer" style="display: none;">
+                            <img id="photoPreview" class="photo-preview" src="" alt="Photo Preview">
+                            <button type="button" class="btn btn-sm btn-danger" id="removePhotoBtn" style="margin-top: 10px;">
+                                <i class="fas fa-trash"></i> Remove Photo
+                            </button>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Add Member
+                    </button>
+                </form>
+            </div>
+            
+            <!-- Expenses Tab -->
+            <div class="tab-content" id="expenses-tab">
+                <h3><i class="fas fa-receipt"></i> Record New Expense</h3>
+                <form id="addExpenseForm">
+                    <div class="form-group">
+                        <label for="expenseDate">Date</label>
+                        <input type="date" id="expenseDate" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="expenseAmount">Amount</label>
+                        <input type="number" id="expenseAmount" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="expenseCategory">Category</label>
+                        <select id="expenseCategory" class="form-control" required>
+                            <option value="">Select Category</option>
+                            <option value="equipment">Equipment</option>
+                            <option value="maintenance">Maintenance</option>
+                            <option value="competition">Competition</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="expenseDescription">Description</label>
+                        <input type="text" id="expenseDescription" class="form-control" required>
+                    </div>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-save"></i> Record Expense
+                    </button>
+                </form>
+                
+                <h3 style="margin-top: 2rem;"><i class="fas fa-list"></i> Expense History</h3>
+                <div class="table-responsive">
+                    <table id="expensesTable">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Amount</th>
+                                <th>Category</th>
+                                <th>Description</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="expensesTableBody">
+                            <!-- Expenses will be added by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Donations Tab -->
+            <div class="tab-content" id="donations-tab">
+                <h3><i class="fas fa-hand-holding-heart"></i> Record New Donation</h3>
+                <form id="addDonationForm">
+                    <div class="form-group">
+                        <label for="donationDate">Date</label>
+                        <input type="date" id="donationDate" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="donationAmount">Amount</label>
+                        <input type="number" id="donationAmount" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="donorName">Donor Name</label>
+                        <input type="text" id="donorName" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="donationPurpose">Purpose</label>
+                        <input type="text" id="donationPurpose" class="form-control">
+                    </div>
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-save"></i> Record Donation
+                    </button>
+                </form>
+                
+                <h3 style="margin-top: 2rem;"><i class="fas fa-list"></i> Donation History</h3>
+                <div class="table-responsive">
+                    <table id="donationsTable">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Amount</th>
+                                <th>Donor</th>
+                                <th>Purpose</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="donationsTableBody">
+                            <!-- Donations will be added by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Members Table -->
+        <div class="card">
+            <h2 class="section-title"><i class="fas fa-users"></i> Members List</h2>
+            <div class="form-group">
+                <input type="text" id="searchMember" class="form-control" placeholder="Search members...">
+            </div>
+            <div class="table-responsive">
+                <table id="membersTable">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Photo</th>
+                            <th>Name</th>
+                            <th>Phone</th>
+                            <th>Join Date</th>
+                            <th>Status (This Week)</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="membersTableBody">
+                        <!-- Members will be added by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Financial Summary with Download (Admin only) -->
+        <div class="card admin-only" id="financialSummaryCard">
+            <h2 class="section-title"><i class="fas fa-chart-pie"></i> Financial Summary</h2>
+            
+            <div class="download-section">
+                <h3><i class="fas fa-download"></i> Download Financial Report</h3>
+                
+                <div class="date-range">
+                    <div class="date-group">
+                        <label for="reportStartDate">From Date</label>
+                        <input type="date" id="reportStartDate" class="form-control">
+                    </div>
+                    <div class="date-group">
+                        <label for="reportEndDate">To Date</label>
+                        <input type="date" id="reportEndDate" class="form-control">
+                    </div>
+                </div>
+                
+                <div class="download-buttons">
+                    <button class="btn btn-primary" id="downloadPDF">
+                        <i class="fas fa-file-pdf"></i> Download PDF Report
+                    </button>
+                    <button class="btn btn-success" id="downloadExcel">
+                        <i class="fas fa-file-excel"></i> Download Excel Report
+                    </button>
+                </div>
+            </div>
+            
+            <div class="financial-highlight">
+                <i class="fas fa-info-circle"></i> Financial Overview
+            </div>
+            
+            <div class="summary-cards">
+                <div class="summary-card">
+                    <h3><i class="fas fa-money-bill-wave"></i> Total Income</h3>
+                    <p id="totalIncome">0</p>
+                </div>
+                <div class="summary-card">
+                    <h3><i class="fas fa-receipt"></i> Total Expenses</h3>
+                    <p id="totalExpenses">0</p>
+                </div>
+                <div class="summary-card">
+                    <h3><i class="fas fa-hand-holding-usd"></i> Total Donations</h3>
+                    <p id="totalDonations">0</p>
+                </div>
+                <div class="summary-card">
+                    <h3><i class="fas fa-wallet"></i> Current Balance</h3>
+                    <p id="currentBalanceSummary">0</p>
+                </div>
+            </div>
+            
+            <!-- Math Summary Section -->
+            <div class="math-summary">
+                <h3><i class="fas fa-calculator"></i> Financial Math</h3>
+                <div class="math-row">
+                    <span class="math-label">Total Member Payments:</span>
+                    <span class="math-value" id="mathIncome">0</span>
+                </div>
+                <div class="math-row">
+                    <span class="math-label">Total Donations:</span>
+                    <span class="math-value" id="mathDonations">0</span>
+                </div>
+                <div class="math-row">
+                    <span class="math-label">Total Expenses:</span>
+                    <span class="math-value" id="mathExpenses">0</span>
+                </div>
+                <div class="math-row">
+                    <span class="math-label">Balance Calculation:</span>
+                    <span class="math-value" id="mathCalculation">0 + 0 - 0</span>
+                </div>
+                <div class="math-result">
+                    <i class="fas fa-equals"></i> Current Balance: <span id="mathResult">0</span>
+                </div>
+                
+                <button class="btn reset-btn" id="resetFinancials">
+                    <i class="fas fa-redo"></i> Reset All Financials to Zero
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Login Modal -->
+    <div class="modal" id="adminModal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h2 style="margin-bottom: 1.5rem;"><i class="fas fa-lock"></i> Admin Login</h2>
+            <div class="form-group">
+                <label for="adminPassword">Password</label>
+                <input type="password" id="adminPassword" class="form-control" placeholder="Enter admin password">
+            </div>
+            <button class="btn btn-primary" id="loginBtn">
+                <i class="fas fa-sign-in-alt"></i> Login
+            </button>
+            <p id="loginError" style="color: var(--danger); margin-top: 1rem; display: none;">
+                <i class="fas fa-exclamation-circle"></i> Incorrect password!
+            </p>
+        </div>
+    </div>
+
+    <!-- Edit Member Modal -->
+    <div class="modal" id="editMemberModal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h2 style="margin-bottom: 1.5rem;"><i class="fas fa-user-edit"></i> Edit Member</h2>
+            <form id="editMemberForm">
+                <input type="hidden" id="editMemberId">
+                <div class="form-group">
+                    <label for="editMemberName">Full Name</label>
+                    <input type="text" id="editMemberName" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="editMemberPhone">Phone Number</label>
+                    <input type="tel" id="editMemberPhone" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="editMemberAddress">Address</label>
+                    <input type="text" id="editMemberAddress" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label for="editMemberPhoto">Photo URL</label>
+                    <input type="url" id="editMemberPhoto" class="form-control" placeholder="https://example.com/photo.jpg">
+                    <div class="photo-preview-container" id="editPhotoPreviewContainer" style="display: none; margin-top: 10px;">
+                        <img id="editPhotoPreview" class="photo-preview" src="" alt="Photo Preview">
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i> Update Member
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Full Screen Photo Viewer -->
+    <div class="photo-viewer" id="photoViewer">
+        <span class="photo-viewer-close">&times;</span>
+        <div class="photo-viewer-content">
+            <img id="fullScreenPhoto" src="" alt="Member Photo">
+        </div>
+        <div class="photo-viewer-info" id="photoInfo"></div>
+    </div>
+
+    <!-- Floating Action Button -->
+    <div class="floating-btn" id="quickPayBtn" title="Quick Payment">
+        <i class="fas fa-money-bill-wave"></i>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <p>&copy; 2025 LEDO Sports Academy. All rights reserved.</p>
+        <p>Weekly Payment: <span class="payment-amount" id="displayPaymentAmount">20</span> every Sunday</p>
+    </footer>
+
+    <!-- JavaScript -->
+    <script>
+        // Configuration
+        const ADMIN_PASSWORD = "887620";
+        let currentWeek = "Week 1";
+        let paymentAmount = 20;
+        let isAdmin = false;
+        
+        // Data arrays
+        let members = [];
+        let expenses = [];
+        let donations = [];
+        
+        // API endpoints
+        const API_BASE_URL = 'http://localhost:3000/api';
+        
+        // Fetch data from backend
+        async function fetchData() {
+            try {
+                const [membersRes, expensesRes, donationsRes] = await Promise.all([
+                    fetch(`${API_BASE_URL}/members`),
+                    fetch(`${API_BASE_URL}/expenses`),
+                    fetch(`${API_BASE_URL}/donations`)
+                ]);
+                
+                members = await membersRes.json();
+                expenses = await expensesRes.json();
+                donations = await donationsRes.json();
+                
+                displayMembers();
+                displayExpenses();
+                displayDonations();
+                displayPublicExpenses();
+                displayPublicDonations();
+                updateSummary();
+                updateFinancialSummary();
+            } catch (error) {
+                console.error('Error fetching data:', error);
+                alert('Error loading data from server');
+            }
+        }
+        
+        // DOM elements
+        const adminToggle = document.getElementById('adminToggle');
+        const adminModal = document.getElementById('adminModal');
+        const adminPanel = document.getElementById('adminPanel');
+        const closeModal = document.querySelectorAll('.close-modal');
+        const loginBtn = document.getElementById('loginBtn');
+        const adminPassword = document.getElementById('adminPassword');
+        const loginError = document.getElementById('loginError');
+        const addMemberForm = document.getElementById('addMemberForm');
+        const membersTableBody = document.getElementById('membersTableBody');
+        const searchMember = document.getElementById('searchMember');
+        const weeksContainer = document.getElementById('weeksContainer');
+        const totalMembersEl = document.getElementById('totalMembers');
+        const paidThisWeekEl = document.getElementById('paidThisWeek');
+        const unpaidThisWeekEl = document.getElementById('unpaidThisWeek');
+        const totalCollectedEl = document.getElementById('totalCollected');
+        const currentBalanceEl = document.getElementById('currentBalance');
+        const paymentAmountInput = document.getElementById('paymentAmount');
+        const updatePaymentBtn = document.getElementById('updatePaymentBtn');
+        const displayPaymentAmount = document.getElementById('displayPaymentAmount');
+        const tabBtns = document.querySelectorAll('.tab-btn');
+        const tabContents = document.querySelectorAll('.tab-content');
+        const addExpenseForm = document.getElementById('addExpenseForm');
+        const expensesTableBody = document.getElementById('expensesTableBody');
+        const addDonationForm = document.getElementById('addDonationForm');
+        const donationsTableBody = document.getElementById('donationsTableBody');
+        const totalIncomeEl = document.getElementById('totalIncome');
+        const totalExpensesEl = document.getElementById('totalExpenses');
+        const totalDonationsEl = document.getElementById('totalDonations');
+        const currentBalanceSummaryEl = document.getElementById('currentBalanceSummary');
+        const quickPayBtn = document.getElementById('quickPayBtn');
+        const downloadPDF = document.getElementById('downloadPDF');
+        const downloadExcel = document.getElementById('downloadExcel');
+        const expensesPublicBody = document.getElementById('expensesPublicBody');
+        const donationsPublicBody = document.getElementById('donationsPublicBody');
+        const reportStartDate = document.getElementById('reportStartDate');
+        const reportEndDate = document.getElementById('reportEndDate');
+        const financialSummaryCard = document.getElementById('financialSummaryCard');
+        const memberPhotoInput = document.getElementById('memberPhoto');
+        const photoPreview = document.getElementById('photoPreview');
+        const photoPreviewContainer = document.getElementById('photoPreviewContainer');
+        const removePhotoBtn = document.getElementById('removePhotoBtn');
+        const photoViewer = document.getElementById('photoViewer');
+        const fullScreenPhoto = document.getElementById('fullScreenPhoto');
+        const photoInfo = document.getElementById('photoInfo');
+        const photoViewerClose = document.querySelector('.photo-viewer-close');
+        const editMemberModal = document.getElementById('editMemberModal');
+        const editMemberForm = document.getElementById('editMemberForm');
+        const editMemberId = document.getElementById('editMemberId');
+        const editMemberName = document.getElementById('editMemberName');
+        const editMemberPhone = document.getElementById('editMemberPhone');
+        const editMemberAddress = document.getElementById('editMemberAddress');
+        const editMemberPhoto = document.getElementById('editMemberPhoto');
+        const editPhotoPreview = document.getElementById('editPhotoPreview');
+        const editPhotoPreviewContainer = document.getElementById('editPhotoPreviewContainer');
+        const mathIncome = document.getElementById('mathIncome');
+        const mathDonations = document.getElementById('mathDonations');
+        const mathExpenses = document.getElementById('mathExpenses');
+        const mathCalculation = document.getElementById('mathCalculation');
+        const mathResult = document.getElementById('mathResult');
+        const resetFinancialsBtn = document.getElementById('resetFinancials');
+        
+        // Initialize the app
+        function initApp() {
+            generateWeeks();
+            displayMembers();
+            displayExpenses();
+            displayDonations();
+            displayPublicExpenses();
+            displayPublicDonations();
+            updateSummary();
+            updateFinancialSummary();
+            displayPaymentAmount.textContent = `${paymentAmount}`;
+            
+            // Set current date in expense and donation forms
+            const today = new Date();
+            document.getElementById('expenseDate').valueAsDate = today;
+            document.getElementById('donationDate').valueAsDate = today;
+            
+            // Set default date range for reports (last 30 days)
+            const startDate = new Date();
+            startDate.setDate(today.getDate() - 30);
+            reportStartDate.valueAsDate = startDate;
+            reportEndDate.valueAsDate = today;
+            
+            // Add event listeners
+            setupEventListeners();
+        }
+        
+        // Setup all event listeners
+        function setupEventListeners() {
+            // Admin login
+            adminToggle.addEventListener('click', () => {
+                adminModal.style.display = 'flex';
+            });
+            
+            closeModal.forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const modal = e.target.closest('.modal');
+                    modal.style.display = 'none';
+                    loginError.style.display = 'none';
+                });
+            });
+            
+            loginBtn.addEventListener('click', () => {
+                if (adminPassword.value === ADMIN_PASSWORD) {
+                    isAdmin = true;
+                    adminPanel.style.display = 'block';
+                    adminModal.style.display = 'none';
+                    adminToggle.innerHTML = '<i class="fas fa-unlock"></i> Admin Mode';
+                    adminToggle.style.background = 'var(--accent)';
+                    loginError.style.display = 'none';
+                    financialSummaryCard.classList.add('admin-visible');
+                    
+                    // Refresh displays to show admin controls
+                    displayMembers();
+                    displayExpenses();
+                    displayDonations();
+                } else {
+                    loginError.style.display = 'block';
+                }
+                adminPassword.value = '';
+            });
+            
+            // Photo URL preview
+            memberPhotoInput.addEventListener('input', function() {
+                if (this.value) {
+                    photoPreview.src = this.value;
+                    photoPreviewContainer.style.display = 'block';
+                } else {
+                    photoPreviewContainer.style.display = 'none';
+                }
+            });
+            
+            editMemberPhoto.addEventListener('input', function() {
+                if (this.value) {
+                    editPhotoPreview.src = this.value;
+                    editPhotoPreviewContainer.style.display = 'block';
+                } else {
+                    editPhotoPreviewContainer.style.display = 'none';
+                }
+            });
+            
+            // Remove photo button
+            removePhotoBtn.addEventListener('click', function() {
+                memberPhotoInput.value = '';
+                photoPreviewContainer.style.display = 'none';
+            });
+            
+            // Add new member
+            addMemberForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const newMember = {
+                    id: members.length > 0 ? Math.max(...members.map(m => m.id)) + 1 : 1,
+                    name: document.getElementById('memberName').value,
+                    phone: document.getElementById('memberPhone').value,
+                    address: document.getElementById('memberAddress').value,
+                    joinDate: new Date().toISOString().split('T')[0],
+                    photoUrl: memberPhotoInput.value || null,
+                    payments: []
+                };
+                
+                try {
+                    const response = await fetch(`${API_BASE_URL}/members`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(newMember)
+                    });
+                    
+                    if (response.ok) {
+                        const savedMember = await response.json();
+                        members.push(savedMember);
+                        addMemberForm.reset();
+                        photoPreviewContainer.style.display = 'none';
+                        displayMembers();
+                        updateSummary();
+                        updateFinancialSummary();
+                        alert(`${newMember.name} has been added as a new member!`);
+                    } else {
+                        throw new Error('Failed to add member');
+                    }
+                } catch (error) {
+                    console.error('Error adding member:', error);
+                    alert('Error adding member');
+                }
+            });
+            
+            // Edit member form
+            editMemberForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                
+                const memberId = parseInt(editMemberId.value);
+                const memberIndex = members.findIndex(m => m.id === memberId);
+                
+                if (memberIndex !== -1) {
+                    members[memberIndex].name = editMemberName.value;
+                    members[memberIndex].phone = editMemberPhone.value;
+                    members[memberIndex].address = editMemberAddress.value;
+                    members[memberIndex].photoUrl = editMemberPhoto.value || null;
+                    
+                    displayMembers();
+                    editMemberModal.style.display = 'none';
+                    alert('Member updated successfully!');
+                }
+            });
+            
+            // Add new expense
+            addExpenseForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const newExpense = {
+                    id: expenses.length > 0 ? Math.max(...expenses.map(e => e.id)) + 1 : 1,
+                    date: document.getElementById('expenseDate').value,
+                    amount: parseInt(document.getElementById('expenseAmount').value),
+                    category: document.getElementById('expenseCategory').value,
+                    description: document.getElementById('expenseDescription').value
+                };
+                
+                try {
+                    const response = await fetch(`${API_BASE_URL}/expenses`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(newExpense)
+                    });
+                    
+                    if (response.ok) {
+                        const savedExpense = await response.json();
+                        expenses.push(savedExpense);
+                        addExpenseForm.reset();
+                        document.getElementById('expenseDate').valueAsDate = new Date();
+                        displayExpenses();
+                        displayPublicExpenses();
+                        updateFinancialSummary();
+                        alert(`Expense of ${newExpense.amount} recorded successfully!`);
+                    } else {
+                        throw new Error('Failed to add expense');
+                    }
+                } catch (error) {
+                    console.error('Error adding expense:', error);
+                    alert('Error adding expense');
+                }
+            });
+            
+            // Add new donation
+            addDonationForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const newDonation = {
+                    id: donations.length > 0 ? Math.max(...donations.map(d => d.id)) + 1 : 1,
+                    date: document.getElementById('donationDate').value,
+                    amount: parseInt(document.getElementById('donationAmount').value),
+                    donor: document.getElementById('donorName').value,
+                    purpose: document.getElementById('donationPurpose').value
+                };
+                
+                try {
+                    const response = await fetch(`${API_BASE_URL}/donations`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(newDonation)
+                    });
+                    
+                    if (response.ok) {
+                        const savedDonation = await response.json();
+                        donations.push(savedDonation);
+                        addDonationForm.reset();
+                        document.getElementById('donationDate').valueAsDate = new Date();
+                        displayDonations();
+                        displayPublicDonations();
+                        updateFinancialSummary();
+                        alert(`Donation of ${newDonation.amount} recorded successfully!`);
+                    } else {
+                        throw new Error('Failed to add donation');
+                    }
+                } catch (error) {
+                    console.error('Error adding donation:', error);
+                    alert('Error adding donation');
+                }
+            });
+            
+            // Update payment amount
+            updatePaymentBtn.addEventListener('click', () => {
+                const newAmount = parseInt(paymentAmountInput.value);
+                if (newAmount > 0) {
+                    paymentAmount = newAmount;
+                    displayPaymentAmount.textContent = `${paymentAmount}`;
+                    alert(`Weekly payment amount updated to ${paymentAmount}`);
+                } else {
+                    alert('Please enter a valid payment amount');
+                }
+            });
+            
+            // Quick payment button
+            quickPayBtn.addEventListener('click', () => {
+                if (!isAdmin) {
+                    adminModal.style.display = 'flex';
+                    return;
+                }
+                
+                const unpaidMembers = members.filter(m => 
+                    !m.payments.some(p => p.week === currentWeek)
+                );
+                
+                if (unpaidMembers.length === 0) {
+                    alert('All members have already paid for this week!');
+                    return;
+                }
+                
+                if (confirm(`Mark all ${unpaidMembers.length} unpaid members as paid for ${currentWeek}?`)) {
+                    unpaidMembers.forEach(member => {
+                        member.payments.push({
+                            date: new Date().toISOString().split('T')[0],
+                            amount: paymentAmount,
+                            week: currentWeek
+                        });
+                    });
+                    
+                    displayMembers();
+                    updateSummary();
+                    updateFinancialSummary();
+                    
+                    alert(`${unpaidMembers.length} members marked as paid for ${currentWeek}`);
+                }
+            });
+            
+            // Download reports
+            downloadPDF.addEventListener('click', downloadPDFReport);
+            downloadExcel.addEventListener('click', downloadExcelReport);
+            
+            // Tab functionality
+            tabBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const tabId = btn.getAttribute('data-tab');
+                    
+                    // Update active tab button
+                    tabBtns.forEach(tb => tb.classList.remove('active'));
+                    btn.classList.add('active');
+                    
+                    // Show corresponding tab content
+                    tabContents.forEach(tc => tc.classList.remove('active'));
+                    document.getElementById(tabId).classList.add('active');
+                });
+            });
+            
+            // Search members
+            searchMember.addEventListener('input', (e) => {
+                const searchTerm = e.target.value.toLowerCase();
+                const rows = document.querySelectorAll('#membersTableBody tr');
+                
+                rows.forEach(row => {
+                    const name = row.querySelector('td:nth-child(3)').textContent.toLowerCase();
+                    const phone = row.querySelector('td:nth-child(4)').textContent.toLowerCase();
+                    
+                    if (name.includes(searchTerm) || phone.includes(searchTerm)) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+            });
+            
+            // Photo viewer close
+            photoViewerClose.addEventListener('click', closePhotoViewer);
+            photoViewer.addEventListener('click', closePhotoViewer);
+            
+            // Reset financials button
+            resetFinancialsBtn.addEventListener('click', () => {
+                if (confirm('Are you sure you want to reset all financial records to zero? This cannot be undone.')) {
+                    resetFinancials();
+                }
+            });
+            
+            // Prevent propagation when clicking inside the photo container
+            document.querySelector('.photo-viewer-content').addEventListener('click', (e) => {
+                e.stopPropagation();
+            });
+        }
+        
+        // Generate weeks (last 8 weeks)
+        function generateWeeks() {
+            weeksContainer.innerHTML = '';
+            
+            for (let i = 1; i <= 8; i++) {
+                const weekBtn = document.createElement('button');
+                weekBtn.className = `week-btn ${i === 1 ? 'active' : ''}`;
+                weekBtn.textContent = `Week ${i}`;
+                weekBtn.addEventListener('click', () => {
+                    currentWeek = `Week ${i}`;
+                    filterByWeek(currentWeek);
+                });
+                weeksContainer.appendChild(weekBtn);
+            }
+        }
+        
+        // Filter by week
+        function filterByWeek(week) {
+            // Update active week button
+            document.querySelectorAll('.week-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.textContent === week) btn.classList.add('active');
+            });
+            
+            // Update display
+            displayMembers();
+            updateSummary();
+        }
+        
+        // Display members in table
+        function displayMembers() {
+            membersTableBody.innerHTML = '';
+            
+            members.forEach(member => {
+                const hasPaid = member.payments.some(p => p.week === currentWeek);
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${member.id}</td>
+                    <td class="photo-cell">
+                        ${member.photoUrl ? 
+                            `<img src="${member.photoUrl}" class="member-photo" alt="${member.name}'s photo" data-id="${member.id}">` : 
+                            `<div class="photo-placeholder" data-id="${member.id}"><i class="fas fa-user"></i></div>`
+                        }
+                    </td>
+                    <td>${member.name}</td>
+                    <td>${member.phone}</td>
+                    <td>${member.joinDate}</td>
+                    <td>
+                        <span class="badge ${hasPaid ? 'badge-success' : 'badge-danger'}">
+                            <i class="fas ${hasPaid ? 'fa-check' : 'fa-times'}"></i>
+                            ${hasPaid ? 'PAID' : 'UNPAID'}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="btn btn-sm ${hasPaid ? 'btn-danger' : 'btn-success'}" data-id="${member.id}">
+                                ${hasPaid ? '<i class="fas fa-undo"></i> Undo' : '<i class="fas fa-check"></i> Mark Paid'}
+                            </button>
+                            ${isAdmin ? `
+                            <button class="btn btn-sm btn-warning edit-member-btn" data-id="${member.id}">
+                                <i class="fas fa-edit"></i> Edit
+                            </button>
+                            <button class="btn btn-sm btn-danger delete-member-btn" data-id="${member.id}">
+                                <i class="fas fa-trash"></i> Delete
+                            </button>
+                            ` : ''}
+                        </div>
+                    </td>
+                `;
+                membersTableBody.appendChild(row);
+            });
+            
+            // Add event listeners to payment buttons if admin
+            if (isAdmin) {
+                document.querySelectorAll('[data-id]').forEach(btn => {
+                    if (btn.tagName === 'BUTTON' && !btn.classList.contains('edit-member-btn') && !btn.classList.contains('delete-member-btn')) {
+                        btn.addEventListener('click', (e) => {
+                            const memberId = parseInt(e.target.getAttribute('data-id'));
+                            togglePayment(memberId);
+                        });
+                    }
+                });
+                
+                // Add event listeners to edit buttons
+                document.querySelectorAll('.edit-member-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const memberId = parseInt(e.target.getAttribute('data-id'));
+                        openEditMemberModal(memberId);
+                    });
+                });
+                
+                // Add event listeners to delete buttons
+                document.querySelectorAll('.delete-member-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const memberId = parseInt(e.target.getAttribute('data-id'));
+                        deleteMember(memberId);
+                    });
+                });
+            }
+            
+            // Add event listeners to photos and placeholders
+            document.querySelectorAll('.photo-cell img, .photo-cell .photo-placeholder').forEach(element => {
+                element.addEventListener('click', (e) => {
+                    const memberId = parseInt(e.target.getAttribute('data-id'));
+                    showFullScreenPhoto(memberId);
+                });
+            });
+        }
+        
+        // Open edit member modal
+        function openEditMemberModal(memberId) {
+            const member = members.find(m => m.id === memberId);
+            if (!member) return;
+            
+            editMemberId.value = member.id;
+            editMemberName.value = member.name;
+            editMemberPhone.value = member.phone;
+            editMemberAddress.value = member.address || '';
+            editMemberPhoto.value = member.photoUrl || '';
+            
+            if (member.photoUrl) {
+                editPhotoPreview.src = member.photoUrl;
+                editPhotoPreviewContainer.style.display = 'block';
+            } else {
+                editPhotoPreviewContainer.style.display = 'none';
+            }
+            
+            editMemberModal.style.display = 'flex';
+        }
+        
+        // Delete member
+        async function deleteMember(memberId) {
+            if (confirm('Are you sure you want to delete this member? All payment history will be lost.')) {
+                try {
+                    const response = await fetch(`${API_BASE_URL}/members/${memberId}`, {
+                        method: 'DELETE'
+                    });
+                    
+                    if (response.ok) {
+                        members = members.filter(m => m.id !== memberId);
+                        displayMembers();
+                        updateSummary();
+                        updateFinancialSummary();
+                        alert('Member deleted successfully!');
+                    } else {
+                        throw new Error('Failed to delete member');
+                    }
+                } catch (error) {
+                    console.error('Error deleting member:', error);
+                    alert('Error deleting member');
+                }
+            }
+        }
+        
+        // Show full screen photo
+        function showFullScreenPhoto(memberId) {
+            const member = members.find(m => m.id === memberId);
+            if (!member || !member.photoUrl) return;
+            
+            fullScreenPhoto.src = member.photoUrl;
+            photoInfo.textContent = `${member.name} | ID: ${member.id}`;
+            photoViewer.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+        
+        // Close photo viewer
+        function closePhotoViewer() {
+            photoViewer.style.display = 'none';
+            document.body.style.overflow = '';
+        }
+        
+        // Display public expenses
+        function displayPublicExpenses() {
+            expensesPublicBody.innerHTML = '';
+            
+            expenses.forEach(expense => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${expense.date}</td>
+                    <td>${expense.amount}</td>
+                    <td>${expense.category.charAt(0).toUpperCase() + expense.category.slice(1)}</td>
+                    <td>${expense.description}</td>
+                `;
+                expensesPublicBody.appendChild(row);
+            });
+        }
+        
+        // Display expenses
+        function displayExpenses() {
+            expensesTableBody.innerHTML = '';
+            
+            expenses.forEach(expense => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${expense.date}</td>
+                    <td>${expense.amount}</td>
+                    <td>${expense.category.charAt(0).toUpperCase() + expense.category.slice(1)}</td>
+                    <td>${expense.description}</td>
+                    <td>
+                        ${isAdmin ? `
+                        <div class="action-buttons">
+                            <button class="btn btn-sm btn-warning edit-expense-btn" data-id="${expense.id}">
+                                <i class="fas fa-edit"></i> Edit
+                            </button>
+                            <button class="btn btn-sm btn-danger delete-expense-btn" data-id="${expense.id}">
+                                <i class="fas fa-trash"></i> Delete
+                            </button>
+                        </div>
+                        ` : ''}
+                    </td>
+                `;
+                expensesTableBody.appendChild(row);
+            });
+            
+            // Add event listeners to delete buttons if admin
+            if (isAdmin) {
+                document.querySelectorAll('.delete-expense-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const expenseId = parseInt(e.target.getAttribute('data-id'));
+                        deleteExpense(expenseId);
+                    });
+                });
+                
+                // Add event listeners to edit buttons
+                document.querySelectorAll('.edit-expense-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const expenseId = parseInt(e.target.getAttribute('data-id'));
+                        // In a real app, you would implement an edit expense modal
+                        alert('Edit expense functionality would open a modal here');
+                    });
+                });
+            }
+        }
+        
+        // Display donations
+        function displayDonations() {
+            donationsTableBody.innerHTML = '';
+            
+            donations.forEach(donation => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${donation.date}</td>
+                    <td>${donation.amount}</td>
+                    <td>${donation.donor}</td>
+                    <td>${donation.purpose || '-'}</td>
+                    <td>
+                        ${isAdmin ? `
+                        <div class="action-buttons">
+                            <button class="btn btn-sm btn-warning edit-donation-btn" data-id="${donation.id}">
+                                <i class="fas fa-edit"></i> Edit
+                            </button>
+                            <button class="btn btn-sm btn-danger delete-donation-btn" data-id="${donation.id}">
+                                <i class="fas fa-trash"></i> Delete
+                            </button>
+                        </div>
+                        ` : ''}
+                    </td>
+                `;
+                donationsTableBody.appendChild(row);
+            });
+            
+            // Add event listeners to delete buttons if admin
+            if (isAdmin) {
+                document.querySelectorAll('.delete-donation-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const donationId = parseInt(e.target.getAttribute('data-id'));
+                        deleteDonation(donationId);
+                    });
+                });
+                
+                // Add event listeners to edit buttons
+                document.querySelectorAll('.edit-donation-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const donationId = parseInt(e.target.getAttribute('data-id'));
+                        // In a real app, you would implement an edit donation modal
+                        alert('Edit donation functionality would open a modal here');
+                    });
+                });
+            }
+        }
+        
+        // Toggle payment status
+        async function togglePayment(memberId) {
+            const member = members.find(m => m.id === memberId);
+            if (!member) return;
+            
+            const paymentIndex = member.payments.findIndex(p => p.week === currentWeek);
+            
+            if (paymentIndex >= 0) {
+                member.payments.splice(paymentIndex, 1);
+            } else {
+                member.payments.push({
+                    date: new Date().toISOString().split('T')[0],
+                    amount: paymentAmount,
+                    week: currentWeek
+                });
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/members/${memberId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(member)
+                });
+                
+                if (response.ok) {
+                    displayMembers();
+                    updateSummary();
+                    updateFinancialSummary();
+                } else {
+                    throw new Error('Failed to update payment');
+                }
+            } catch (error) {
+                console.error('Error updating payment:', error);
+                alert('Error updating payment');
+            }
+        }
+        
+        // Display public donations
+        function displayPublicDonations() {
+            donationsPublicBody.innerHTML = '';
+            
+            donations.forEach(donation => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${donation.date}</td>
+                    <td>${donation.amount}</td>
+                    <td>${donation.donor}</td>
+                    <td>${donation.purpose || '-'}</td>
+                `;
+                donationsPublicBody.appendChild(row);
+            });
+        }
+        
+        // Delete expense
+        async function deleteExpense(id) {
+            if (confirm('Are you sure you want to delete this expense?')) {
+                try {
+                    const response = await fetch(`${API_BASE_URL}/expenses/${id}`, {
+                        method: 'DELETE'
+                    });
+                    
+                    if (response.ok) {
+                        expenses = expenses.filter(expense => expense.id !== id);
+                        displayExpenses();
+                        displayPublicExpenses();
+                        updateFinancialSummary();
+                    } else {
+                        throw new Error('Failed to delete expense');
+                    }
+                } catch (error) {
+                    console.error('Error deleting expense:', error);
+                    alert('Error deleting expense');
+                }
+            }
+        }
+        
+        // Delete donation
+        async function deleteDonation(id) {
+            if (confirm('Are you sure you want to delete this donation?')) {
+                try {
+                    const response = await fetch(`${API_BASE_URL}/donations/${id}`, {
+                        method: 'DELETE'
+                    });
+                    
+                    if (response.ok) {
+                        donations = donations.filter(donation => donation.id !== id);
+                        displayDonations();
+                        displayPublicDonations();
+                        updateFinancialSummary();
+                    } else {
+                        throw new Error('Failed to delete donation');
+                    }
+                } catch (error) {
+                    console.error('Error deleting donation:', error);
+                    alert('Error deleting donation');
+                }
+            }
+        }
+        
+        // Update summary cards
+        function updateSummary() {
+            totalMembersEl.textContent = members.length;
+            
+            const paidCount = members.filter(m => 
+                m.payments.some(p => p.week === currentWeek)
+            ).length;
+            
+            paidThisWeekEl.textContent = paidCount;
+            unpaidThisWeekEl.textContent = members.length - paidCount;
+            
+            // Calculate total collected (all time)
+            const total = members.reduce((sum, member) => {
+                return sum + member.payments.reduce((memberSum, payment) => {
+                    return memberSum + payment.amount;
+                }, 0);
+            }, 0);
+            
+            totalCollectedEl.textContent = `${total}`;
+            
+            // Update current balance
+            updateFinancialSummary();
+        }
+        
+        // Update financial summary
+        function updateFinancialSummary() {
+            // Calculate total income from payments
+            const totalIncome = members.reduce((sum, member) => {
+                return sum + member.payments.reduce((memberSum, payment) => {
+                    return memberSum + payment.amount;
+                }, 0);
+            }, 0);
+            
+            // Calculate total expenses
+            const totalExpenses = expenses.reduce((sum, expense) => sum + expense.amount, 0);
+            
+            // Calculate total donations
+            const totalDonations = donations.reduce((sum, donation) => sum + donation.amount, 0);
+            
+            // Calculate current balance
+            const currentBalance = totalIncome + totalDonations - totalExpenses;
+            
+            // Update display
+            totalIncomeEl.textContent = `${totalIncome}`;
+            totalExpensesEl.textContent = `${totalExpenses}`;
+            totalDonationsEl.textContent = `${totalDonations}`;
+            currentBalanceSummaryEl.textContent = `${currentBalance}`;
+            currentBalanceEl.textContent = `${currentBalance}`;
+            
+            // Update math summary
+            mathIncome.textContent = totalIncome;
+            mathDonations.textContent = totalDonations;
+            mathExpenses.textContent = totalExpenses;
+            mathCalculation.textContent = `${totalIncome} + ${totalDonations} - ${totalExpenses}`;
+            mathResult.textContent = currentBalance;
+        }
+        
+        // Reset financials to zero
+        function resetFinancials() {
+            // Reset all payments
+            members.forEach(member => {
+                member.payments = [];
+            });
+            
+            // Clear expenses and donations
+            expenses = [];
+            donations = [];
+            
+            // Update displays
+            displayMembers();
+            displayExpenses();
+            displayDonations();
+            displayPublicExpenses();
+            displayPublicDonations();
+            updateSummary();
+            updateFinancialSummary();
+            
+            alert('All financial records have been reset to zero!');
+        }
+        
+        // Download PDF Report
+        function downloadPDFReport() {
+            alert('PDF download functionality would be implemented here');
+        }
+        
+        // Download Excel Report
+        function downloadExcelReport() {
+            alert('Excel download functionality would be implemented here');
+        }
+        
+        // Initialize the app
+        document.addEventListener('DOMContentLoaded', () => {
+            initApp();
+            fetchData(); // Fetch initial data from backend
+        });
+    </script>
+</body>
+</html>
