@@ -1430,30 +1430,25 @@
             addMemberForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 
-                const name = document.getElementById('memberName').value.trim();
-                const phone = document.getElementById('memberPhone').value.trim();
-                const address = document.getElementById('memberAddress').value.trim();
-                const photoUrl = memberPhotoInput.value.trim();
-
-                if (!name || !phone) {
-                    alert('Name and phone number are required!');
-                    return;
-                }
-
                 try {
+                    const formData = {
+                        name: document.getElementById('memberName').value.trim(),
+                        phone: document.getElementById('memberPhone').value.trim(),
+                        address: document.getElementById('memberAddress').value.trim(),
+                        photoUrl: memberPhotoInput.value.trim() || null
+                    };
+
+                    if (!formData.name || !formData.phone) {
+                        alert('Name and phone number are required!');
+                        return;
+                    }
+
                     const response = await fetch(`${API_BASE_URL}/members`, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json'
                         },
-                        body: JSON.stringify({
-                            name,
-                            phone,
-                            address,
-                            photoUrl: photoUrl || null,
-                            joinDate: new Date().toISOString().split('T')[0],
-                            payments: []
-                        })
+                        body: JSON.stringify(formData)
                     });
 
                     if (!response.ok) {
@@ -1479,34 +1474,30 @@
             editMemberForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 
-                const memberId = parseInt(editMemberId.value);
-                if (isNaN(memberId)) {
-                    alert('Invalid member ID');
-                    return;
-                }
-
-                const name = editMemberName.value.trim();
-                const phone = editMemberPhone.value.trim();
-                const address = editMemberAddress.value.trim();
-                const photoUrl = editMemberPhoto.value.trim();
-
-                if (!name || !phone) {
-                    alert('Name and phone number are required!');
-                    return;
-                }
-
                 try {
+                    const memberId = parseInt(editMemberId.value);
+                    if (isNaN(memberId)) {
+                        throw new Error('Invalid member ID');
+                    }
+
+                    const formData = {
+                        name: editMemberName.value.trim(),
+                        phone: editMemberPhone.value.trim(),
+                        address: editMemberAddress.value.trim(),
+                        photoUrl: editMemberPhoto.value.trim() || null
+                    };
+
+                    if (!formData.name || !formData.phone) {
+                        alert('Name and phone number are required!');
+                        return;
+                    }
+
                     const response = await fetch(`${API_BASE_URL}/members/${memberId}`, {
                         method: 'PUT',
                         headers: {
                             'Content-Type': 'application/json'
                         },
-                        body: JSON.stringify({
-                            name,
-                            phone,
-                            address,
-                            photoUrl: photoUrl || null
-                        })
+                        body: JSON.stringify(formData)
                     });
 
                     if (!response.ok) {
@@ -1738,6 +1729,8 @@
         function displayMembers() {
             membersTableBody.innerHTML = '';
             
+            const fragment = document.createDocumentFragment();
+            
             members.forEach(member => {
                 const hasPaid = member.payments.some(p => p.week === currentWeek);
                 
@@ -1761,54 +1754,24 @@
                     </td>
                     <td>
                         <div class="action-buttons">
-                            <button class="btn btn-sm ${hasPaid ? 'btn-danger' : 'btn-success'} payment-btn" data-id="${member.id}" type="button">
+                            <button onclick="togglePayment(${member.id})" class="btn btn-sm ${hasPaid ? 'btn-danger' : 'btn-success'} payment-btn" type="button">
                                 ${hasPaid ? '<i class="fas fa-undo"></i> Undo' : '<i class="fas fa-check"></i> Mark Paid'}
                             </button>
                             ${isAdmin ? `
-                            <button class="btn btn-sm btn-warning edit-member-btn" data-id="${member.id}" type="button">
+                            <button onclick="openEditMemberModal(${member.id})" class="btn btn-sm btn-warning edit-member-btn" type="button">
                                 <i class="fas fa-edit"></i> Edit
                             </button>
-                            <button class="btn btn-sm btn-danger delete-member-btn" data-id="${member.id}" type="button">
+                            <button onclick="deleteMember(${member.id})" class="btn btn-sm btn-danger delete-member-btn" type="button">
                                 <i class="fas fa-trash"></i> Delete
                             </button>
                             ` : ''}
                         </div>
                     </td>
                 `;
-                membersTableBody.appendChild(row);
+                fragment.appendChild(row);
             });
-
-            if (isAdmin) {
-                // Add event listeners for admin actions
-                membersTableBody.addEventListener('click', async (e) => {
-                    const target = e.target.closest('button');
-                    if (!target) return;
-
-                    e.preventDefault();
-                    e.stopPropagation();
-
-                    const memberId = parseInt(target.getAttribute('data-id'));
-                    if (isNaN(memberId)) return;
-
-                    if (target.classList.contains('payment-btn')) {
-                        await togglePayment(memberId);
-                    } else if (target.classList.contains('edit-member-btn')) {
-                        openEditMemberModal(memberId);
-                    } else if (target.classList.contains('delete-member-btn')) {
-                        await deleteMember(memberId);
-                    }
-                });
-            }
-
-            // Add photo viewer event listeners
-            document.querySelectorAll('.photo-cell img, .photo-cell .photo-placeholder').forEach(element => {
-                element.addEventListener('click', (e) => {
-                    const memberId = parseInt(e.target.getAttribute('data-id'));
-                    if (!isNaN(memberId)) {
-                        showFullScreenPhoto(memberId);
-                    }
-                });
-            });
+            
+            membersTableBody.appendChild(fragment);
         }
         
         // Open edit member modal
@@ -2006,40 +1969,55 @@
         
         // Toggle payment status
         async function togglePayment(memberId) {
-            const member = members.find(m => m.id === memberId);
-            if (!member) return;
-            
-            const paymentIndex = member.payments.findIndex(p => p.week === currentWeek);
-            
-            if (paymentIndex >= 0) {
-                member.payments.splice(paymentIndex, 1);
-            } else {
-                member.payments.push({
-                    date: new Date().toISOString().split('T')[0],
-                    amount: paymentAmount,
-                    week: currentWeek
-                });
-            }
-            
             try {
+                const member = members.find(m => m.id === memberId);
+                if (!member) {
+                    throw new Error('Member not found');
+                }
+
+                const hasPaid = member.payments.some(p => p.week === currentWeek);
+                let updatedPayments = [...member.payments];
+
+                if (hasPaid) {
+                    // Remove payment for current week
+                    updatedPayments = updatedPayments.filter(p => p.week !== currentWeek);
+                } else {
+                    // Add payment for current week
+                    updatedPayments.push({
+                        date: new Date().toISOString().split('T')[0],
+                        amount: paymentAmount,
+                        week: currentWeek
+                    });
+                }
+
                 const response = await fetch(`${API_BASE_URL}/members/${memberId}`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify(member)
+                    body: JSON.stringify({
+                        ...member,
+                        payments: updatedPayments
+                    })
                 });
-                
-                if (response.ok) {
-                    displayMembers();
-                    updateSummary();
-                    updateFinancialSummary();
-                } else {
-                    throw new Error('Failed to update payment');
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Failed to update payment');
                 }
+
+                const updatedMember = await response.json();
+                const memberIndex = members.findIndex(m => m.id === memberId);
+                if (memberIndex !== -1) {
+                    members[memberIndex] = updatedMember;
+                }
+
+                displayMembers();
+                updateSummary();
+                updateFinancialSummary();
             } catch (error) {
                 console.error('Error updating payment:', error);
-                alert('Error updating payment');
+                alert(error.message || 'Error updating payment status');
             }
         }
         
