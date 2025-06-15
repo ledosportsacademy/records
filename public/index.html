@@ -1718,7 +1718,7 @@
                     </td>
                     <td>
                         <div class="action-buttons">
-                            <button class="btn btn-sm ${hasPaid ? 'btn-danger' : 'btn-success'}" data-id="${member.id}">
+                            <button class="btn btn-sm ${hasPaid ? 'btn-danger' : 'btn-success'} payment-btn" data-id="${member.id}">
                                 ${hasPaid ? '<i class="fas fa-undo"></i> Undo' : '<i class="fas fa-check"></i> Mark Paid'}
                             </button>
                             ${isAdmin ? `
@@ -1735,39 +1735,41 @@
                 membersTableBody.appendChild(row);
             });
             
-            // Add event listeners to payment buttons if admin
+            // Add event listeners if admin
             if (isAdmin) {
-                document.querySelectorAll('[data-id]').forEach(btn => {
-                    if (btn.tagName === 'BUTTON' && !btn.classList.contains('edit-member-btn') && !btn.classList.contains('delete-member-btn')) {
-                        btn.addEventListener('click', (e) => {
-                            const memberId = parseInt(e.target.getAttribute('data-id'));
+                // Payment buttons
+                document.querySelectorAll('.payment-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        const memberId = parseInt(e.target.closest('.payment-btn').getAttribute('data-id'));
+                        if (!isNaN(memberId)) {
                             togglePayment(memberId);
-                        });
-                    }
+                        }
+                    });
                 });
                 
-                // Add event listeners to edit buttons
+                // Edit buttons
                 document.querySelectorAll('.edit-member-btn').forEach(btn => {
                     btn.addEventListener('click', (e) => {
-                        const memberId = parseInt(e.target.getAttribute('data-id'));
-                        openEditMemberModal(memberId);
+                        e.preventDefault();
+                        const memberId = parseInt(e.target.closest('.edit-member-btn').getAttribute('data-id'));
+                        if (!isNaN(memberId)) {
+                            openEditMemberModal(memberId);
+                        }
                     });
                 });
                 
-                // Add event listeners to delete buttons
-                document.querySelectorAll('.delete-member-btn').forEach(btn => {
-                    btn.addEventListener('click', (e) => {
-                        const memberId = parseInt(e.target.getAttribute('data-id'));
-                        deleteMember(memberId);
-                    });
-                });
+                // Delete buttons
+                addDeleteButtonListeners();
             }
             
-            // Add event listeners to photos and placeholders
+            // Photo viewers
             document.querySelectorAll('.photo-cell img, .photo-cell .photo-placeholder').forEach(element => {
                 element.addEventListener('click', (e) => {
                     const memberId = parseInt(e.target.getAttribute('data-id'));
-                    showFullScreenPhoto(memberId);
+                    if (!isNaN(memberId)) {
+                        showFullScreenPhoto(memberId);
+                    }
                 });
             });
         }
@@ -1795,26 +1797,55 @@
         
         // Delete member
         async function deleteMember(memberId) {
+            if (!memberId) {
+                console.error('Invalid member ID');
+                alert('Error: Invalid member ID');
+                return;
+            }
+
             if (confirm('Are you sure you want to delete this member? All payment history will be lost.')) {
                 try {
                     const response = await fetch(`${API_BASE_URL}/members/${memberId}`, {
-                        method: 'DELETE'
+                        method: 'DELETE',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
                     });
+
+                    const data = await response.json();
                     
-                    if (response.ok) {
-                        members = members.filter(m => m.id !== memberId);
-                        displayMembers();
-                        updateSummary();
-                        updateFinancialSummary();
-                        alert('Member deleted successfully!');
-                    } else {
-                        throw new Error('Failed to delete member');
+                    if (!response.ok) {
+                        throw new Error(data.error || 'Failed to delete member');
                     }
+
+                    // Remove member from local array
+                    members = members.filter(m => m.id !== memberId);
+                    
+                    // Update UI
+                    displayMembers();
+                    updateSummary();
+                    updateFinancialSummary();
+                    
+                    alert('Member deleted successfully');
                 } catch (error) {
                     console.error('Error deleting member:', error);
-                    alert('Error deleting member');
+                    alert(`Error deleting member: ${error.message}`);
                 }
             }
+        }
+        
+        // Add event listeners to delete buttons
+        function addDeleteButtonListeners() {
+            document.querySelectorAll('.delete-member-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const memberId = parseInt(e.target.closest('.delete-member-btn').getAttribute('data-id'));
+                    if (!isNaN(memberId)) {
+                        deleteMember(memberId);
+                    }
+                });
+            });
         }
         
         // Show full screen photo
