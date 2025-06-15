@@ -57,22 +57,34 @@ const memberSchema = new mongoose.Schema({
     id: { 
         type: Number,
         required: true,
-        unique: true
+        unique: true,
+        validate: {
+            validator: Number.isInteger,
+            message: '{VALUE} is not a valid member ID'
+        }
     },
     name: {
         type: String,
-        required: true
+        required: true,
+        trim: true
     },
     phone: {
         type: String,
-        required: true
+        required: true,
+        trim: true
     },
-    address: String,
+    address: {
+        type: String,
+        trim: true
+    },
     joinDate: {
         type: String,
         required: true
     },
-    photoUrl: String,
+    photoUrl: {
+        type: String,
+        trim: true
+    },
     payments: [{
         date: {
             type: String,
@@ -80,13 +92,38 @@ const memberSchema = new mongoose.Schema({
         },
         amount: {
             type: Number,
-            required: true
+            required: true,
+            min: [0, 'Payment amount cannot be negative']
         },
         week: {
             type: String,
             required: true
         }
     }]
+});
+
+// Add pre-save middleware to ensure ID is valid
+memberSchema.pre('save', async function(next) {
+    if (this.isNew) {
+        try {
+            const lastMember = await this.constructor.findOne().sort({ id: -1 });
+            this.id = lastMember ? lastMember.id + 1 : 1;
+        } catch (error) {
+            return next(error);
+        }
+    }
+    next();
+});
+
+// Add pre-validate middleware to ensure ID is a valid number
+memberSchema.pre('validate', function(next) {
+    if (this.isModified('id')) {
+        if (typeof this.id !== 'number' || isNaN(this.id) || !Number.isInteger(this.id)) {
+            next(new Error('Member ID must be a valid integer'));
+            return;
+        }
+    }
+    next();
 });
 
 const expenseSchema = new mongoose.Schema({
@@ -112,12 +149,6 @@ const Donation = mongoose.model('Donation', donationSchema);
 // API Routes
 const apiRouter = express.Router();
 
-// Add this helper function at the top with other utility functions
-async function getNextMemberId() {
-    const lastMember = await Member.findOne().sort({ id: -1 });
-    return lastMember ? lastMember.id + 1 : 1;
-}
-
 // Members
 apiRouter.get('/members', async (req, res) => {
     try {
@@ -130,20 +161,19 @@ apiRouter.get('/members', async (req, res) => {
 
 apiRouter.post('/members', async (req, res) => {
     try {
-        // Generate the next ID
-        const nextId = await getNextMemberId();
-        
         const memberData = {
-            ...req.body,
-            id: nextId,
+            name: req.body.name.trim(),
+            phone: req.body.phone.trim(),
+            address: req.body.address ? req.body.address.trim() : '',
+            photoUrl: req.body.photoUrl ? req.body.photoUrl.trim() : null,
             joinDate: req.body.joinDate || new Date().toISOString().split('T')[0],
             payments: req.body.payments || []
         };
 
         const member = new Member(memberData);
-        await member.validate(); // Validate before saving
-        
+        await member.validate();
         const savedMember = await member.save();
+        
         console.log(`New member created with ID: ${savedMember.id}`);
         res.status(201).json(savedMember);
     } catch (err) {
@@ -172,10 +202,12 @@ apiRouter.put('/members/:id', async (req, res) => {
             return res.status(400).json({ error: 'Name and phone are required fields' });
         }
 
-        // Prepare update data while preserving the ID and existing payments
+        // Prepare update data
         const updateData = {
-            ...req.body,
-            id: memberId, // Ensure ID remains unchanged
+            name: req.body.name.trim(),
+            phone: req.body.phone.trim(),
+            address: req.body.address ? req.body.address.trim() : '',
+            photoUrl: req.body.photoUrl ? req.body.photoUrl.trim() : null,
             payments: existingMember.payments // Preserve existing payments
         };
 
@@ -185,7 +217,7 @@ apiRouter.put('/members/:id', async (req, res) => {
             updateData,
             { 
                 new: true,
-                runValidators: true // Enable validation
+                runValidators: true
             }
         );
 
