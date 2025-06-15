@@ -1430,16 +1430,25 @@
             addMemberForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 
+                const name = document.getElementById('memberName').value.trim();
+                const phone = document.getElementById('memberPhone').value.trim();
+                const address = document.getElementById('memberAddress').value.trim();
+                const photoUrl = memberPhotoInput.value.trim();
+
+                if (!name || !phone) {
+                    alert('Name and phone number are required!');
+                    return;
+                }
+
                 const newMember = {
-                    id: members.length > 0 ? Math.max(...members.map(m => m.id)) + 1 : 1,
-                    name: document.getElementById('memberName').value,
-                    phone: document.getElementById('memberPhone').value,
-                    address: document.getElementById('memberAddress').value,
+                    name,
+                    phone,
+                    address,
                     joinDate: new Date().toISOString().split('T')[0],
-                    photoUrl: memberPhotoInput.value || null,
+                    photoUrl: photoUrl || null,
                     payments: []
                 };
-                
+
                 try {
                     const response = await fetch(`${API_BASE_URL}/members`, {
                         method: 'POST',
@@ -1448,41 +1457,73 @@
                         },
                         body: JSON.stringify(newMember)
                     });
-                    
-                    if (response.ok) {
-                        const savedMember = await response.json();
-                        members.push(savedMember);
-                        addMemberForm.reset();
-                        photoPreviewContainer.style.display = 'none';
-                        displayMembers();
-                        updateSummary();
-                        updateFinancialSummary();
-                        alert(`${newMember.name} has been added as a new member!`);
-                    } else {
-                        throw new Error('Failed to add member');
+
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.error || 'Failed to add member');
                     }
+
+                    const savedMember = await response.json();
+                    members.push(savedMember);
+                    addMemberForm.reset();
+                    photoPreviewContainer.style.display = 'none';
+                    displayMembers();
+                    updateSummary();
+                    updateFinancialSummary();
+                    alert(`${newMember.name} has been added as a new member!`);
                 } catch (error) {
                     console.error('Error adding member:', error);
-                    alert('Error adding member');
+                    alert(error.message || 'Error adding member');
                 }
             });
-            
+
             // Edit member form
-            editMemberForm.addEventListener('submit', (e) => {
+            editMemberForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 
                 const memberId = parseInt(editMemberId.value);
-                const memberIndex = members.findIndex(m => m.id === memberId);
-                
-                if (memberIndex !== -1) {
-                    members[memberIndex].name = editMemberName.value;
-                    members[memberIndex].phone = editMemberPhone.value;
-                    members[memberIndex].address = editMemberAddress.value;
-                    members[memberIndex].photoUrl = editMemberPhoto.value || null;
-                    
+                if (isNaN(memberId)) {
+                    alert('Invalid member ID');
+                    return;
+                }
+
+                const updatedMember = {
+                    id: memberId,
+                    name: editMemberName.value.trim(),
+                    phone: editMemberPhone.value.trim(),
+                    address: editMemberAddress.value.trim(),
+                    photoUrl: editMemberPhoto.value.trim() || null
+                };
+
+                try {
+                    const response = await fetch(`${API_BASE_URL}/members/${memberId}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(updatedMember)
+                    });
+
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.error || 'Failed to update member');
+                    }
+
+                    const updatedData = await response.json();
+                    const memberIndex = members.findIndex(m => m.id === memberId);
+                    if (memberIndex !== -1) {
+                        members[memberIndex] = {
+                            ...members[memberIndex],
+                            ...updatedData
+                        };
+                    }
+
                     displayMembers();
                     editMemberModal.style.display = 'none';
                     alert('Member updated successfully!');
+                } catch (error) {
+                    console.error('Error updating member:', error);
+                    alert(error.message || 'Error updating member');
                 }
             });
             
@@ -1718,14 +1759,14 @@
                     </td>
                     <td>
                         <div class="action-buttons">
-                            <button class="btn btn-sm ${hasPaid ? 'btn-danger' : 'btn-success'} payment-btn" data-id="${member.id}">
+                            <button class="btn btn-sm ${hasPaid ? 'btn-danger' : 'btn-success'} payment-btn" data-id="${member.id}" type="button">
                                 ${hasPaid ? '<i class="fas fa-undo"></i> Undo' : '<i class="fas fa-check"></i> Mark Paid'}
                             </button>
                             ${isAdmin ? `
-                            <button class="btn btn-sm btn-warning edit-member-btn" data-id="${member.id}">
+                            <button class="btn btn-sm btn-warning edit-member-btn" data-id="${member.id}" type="button">
                                 <i class="fas fa-edit"></i> Edit
                             </button>
-                            <button class="btn btn-sm btn-danger delete-member-btn" data-id="${member.id}">
+                            <button class="btn btn-sm btn-danger delete-member-btn" data-id="${member.id}" type="button">
                                 <i class="fas fa-trash"></i> Delete
                             </button>
                             ` : ''}
@@ -1734,36 +1775,30 @@
                 `;
                 membersTableBody.appendChild(row);
             });
-            
-            // Add event listeners if admin
+
             if (isAdmin) {
-                // Payment buttons
-                document.querySelectorAll('.payment-btn').forEach(btn => {
-                    btn.addEventListener('click', (e) => {
-                        e.preventDefault();
-                        const memberId = parseInt(e.target.closest('.payment-btn').getAttribute('data-id'));
-                        if (!isNaN(memberId)) {
-                            togglePayment(memberId);
-                        }
-                    });
+                // Add event listeners for admin actions
+                membersTableBody.addEventListener('click', async (e) => {
+                    const target = e.target.closest('button');
+                    if (!target) return;
+
+                    e.preventDefault();
+                    e.stopPropagation();
+
+                    const memberId = parseInt(target.getAttribute('data-id'));
+                    if (isNaN(memberId)) return;
+
+                    if (target.classList.contains('payment-btn')) {
+                        await togglePayment(memberId);
+                    } else if (target.classList.contains('edit-member-btn')) {
+                        openEditMemberModal(memberId);
+                    } else if (target.classList.contains('delete-member-btn')) {
+                        await deleteMember(memberId);
+                    }
                 });
-                
-                // Edit buttons
-                document.querySelectorAll('.edit-member-btn').forEach(btn => {
-                    btn.addEventListener('click', (e) => {
-                        e.preventDefault();
-                        const memberId = parseInt(e.target.closest('.edit-member-btn').getAttribute('data-id'));
-                        if (!isNaN(memberId)) {
-                            openEditMemberModal(memberId);
-                        }
-                    });
-                });
-                
-                // Delete buttons
-                addDeleteButtonListeners();
             }
-            
-            // Photo viewers
+
+            // Add photo viewer event listeners
             document.querySelectorAll('.photo-cell img, .photo-cell .photo-placeholder').forEach(element => {
                 element.addEventListener('click', (e) => {
                     const memberId = parseInt(e.target.getAttribute('data-id'));
