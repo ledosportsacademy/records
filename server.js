@@ -112,6 +112,12 @@ const Donation = mongoose.model('Donation', donationSchema);
 // API Routes
 const apiRouter = express.Router();
 
+// Add this helper function at the top with other utility functions
+async function getNextMemberId() {
+    const lastMember = await Member.findOne().sort({ id: -1 });
+    return lastMember ? lastMember.id + 1 : 1;
+}
+
 // Members
 apiRouter.get('/members', async (req, res) => {
     try {
@@ -124,34 +130,25 @@ apiRouter.get('/members', async (req, res) => {
 
 apiRouter.post('/members', async (req, res) => {
     try {
-        console.log('Received member data:', req.body);
-        
-        // Validate required fields
-        if (!req.body.name || !req.body.phone) {
-            return res.status(400).json({ error: 'Name and phone are required fields' });
-        }
-
-        // Generate new ID
-        const lastMember = await Member.findOne().sort({ id: -1 });
-        const newId = lastMember ? lastMember.id + 1 : 1;
+        // Generate the next ID
+        const nextId = await getNextMemberId();
         
         const memberData = {
             ...req.body,
-            id: newId,
+            id: nextId,
+            joinDate: req.body.joinDate || new Date().toISOString().split('T')[0],
             payments: req.body.payments || []
         };
 
         const member = new Member(memberData);
+        await member.validate(); // Validate before saving
+        
         const savedMember = await member.save();
-        console.log('Member saved successfully:', savedMember);
+        console.log(`New member created with ID: ${savedMember.id}`);
         res.status(201).json(savedMember);
     } catch (err) {
-        console.error('Error saving member:', err);
-        if (err.code === 11000) {
-            res.status(400).json({ error: 'Duplicate member ID found' });
-        } else {
-            res.status(400).json({ error: err.message });
-        }
+        console.error('Error creating member:', err);
+        res.status(400).json({ error: err.message || 'Failed to create member' });
     }
 });
 
@@ -175,21 +172,32 @@ apiRouter.put('/members/:id', async (req, res) => {
             return res.status(400).json({ error: 'Name and phone are required fields' });
         }
 
-        // Update member data while preserving existing fields
+        // Prepare update data while preserving the ID and existing payments
+        const updateData = {
+            ...req.body,
+            id: memberId, // Ensure ID remains unchanged
+            payments: existingMember.payments // Preserve existing payments
+        };
+
+        // Update member data
         const updatedMember = await Member.findOneAndUpdate(
             { id: memberId },
-            {
-                ...req.body,
-                payments: existingMember.payments // Preserve existing payments
-            },
-            { new: true } // Return the updated document
+            updateData,
+            { 
+                new: true,
+                runValidators: true // Enable validation
+            }
         );
+
+        if (!updatedMember) {
+            return res.status(404).json({ error: 'Member not found' });
+        }
 
         console.log(`Member updated successfully: ID ${memberId}`);
         res.json(updatedMember);
     } catch (err) {
         console.error('Error updating member:', err);
-        res.status(500).json({ error: 'Failed to update member' });
+        res.status(400).json({ error: err.message || 'Failed to update member' });
     }
 });
 
@@ -201,18 +209,17 @@ apiRouter.delete('/members/:id', async (req, res) => {
             return res.status(400).json({ error: 'Invalid member ID' });
         }
 
-        const member = await Member.findOne({ id: memberId });
+        const deletedMember = await Member.findOneAndDelete({ id: memberId });
         
-        if (!member) {
+        if (!deletedMember) {
             return res.status(404).json({ error: 'Member not found' });
         }
 
-        await Member.deleteOne({ id: memberId });
         console.log(`Member deleted successfully: ID ${memberId}`);
-        res.status(200).json({ message: 'Member deleted successfully' });
+        res.json({ message: 'Member deleted successfully' });
     } catch (err) {
         console.error('Error deleting member:', err);
-        res.status(500).json({ error: 'Failed to delete member' });
+        res.status(500).json({ error: err.message || 'Failed to delete member' });
     }
 });
 
