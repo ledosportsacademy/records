@@ -170,10 +170,24 @@ apiRouter.put('/members/:id', async (req, res) => {
 
 apiRouter.delete('/members/:id', async (req, res) => {
     try {
-        await Member.findOneAndDelete({ id: req.params.id });
-        res.status(204).send();
+        const memberId = parseInt(req.params.id);
+        
+        if (isNaN(memberId)) {
+            return res.status(400).json({ error: 'Invalid member ID' });
+        }
+
+        const member = await Member.findOne({ id: memberId });
+        
+        if (!member) {
+            return res.status(404).json({ error: 'Member not found' });
+        }
+
+        await Member.deleteOne({ id: memberId });
+        console.log(`Member deleted successfully: ID ${memberId}`);
+        res.status(200).json({ message: 'Member deleted successfully' });
     } catch (err) {
-        res.status(400).json({ error: err.message });
+        console.error('Error deleting member:', err);
+        res.status(500).json({ error: 'Failed to delete member' });
     }
 });
 
