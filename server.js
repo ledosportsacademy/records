@@ -30,8 +30,6 @@ const connectWithRetry = async () => {
     
     try {
         await mongoose.connect(MONGODB_URI, {
-            useNewUrlParser: true,
-            useUnifiedTopology: true,
             serverSelectionTimeoutMS: 5000 // Timeout after 5s instead of 30s
         });
         console.log('Connected to MongoDB');
