@@ -157,14 +157,39 @@ apiRouter.post('/members', async (req, res) => {
 
 apiRouter.put('/members/:id', async (req, res) => {
     try {
-        const member = await Member.findOneAndUpdate(
-            { id: req.params.id },
-            req.body,
-            { new: true }
+        const memberId = parseInt(req.params.id);
+        
+        if (isNaN(memberId)) {
+            return res.status(400).json({ error: 'Invalid member ID' });
+        }
+
+        // Find the existing member
+        const existingMember = await Member.findOne({ id: memberId });
+        
+        if (!existingMember) {
+            return res.status(404).json({ error: 'Member not found' });
+        }
+
+        // Validate required fields
+        if (!req.body.name || !req.body.phone) {
+            return res.status(400).json({ error: 'Name and phone are required fields' });
+        }
+
+        // Update member data while preserving existing fields
+        const updatedMember = await Member.findOneAndUpdate(
+            { id: memberId },
+            {
+                ...req.body,
+                payments: existingMember.payments // Preserve existing payments
+            },
+            { new: true } // Return the updated document
         );
-        res.json(member);
+
+        console.log(`Member updated successfully: ID ${memberId}`);
+        res.json(updatedMember);
     } catch (err) {
-        res.status(400).json({ error: err.message });
+        console.error('Error updating member:', err);
+        res.status(500).json({ error: 'Failed to update member' });
     }
 });
 
